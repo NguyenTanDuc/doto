@@ -1,0 +1,24 @@
+class SessionsController < ApplicationController
+  skip_before_filter :verify_authenticity_token, only: :create
+
+  def create
+    begin
+      @user = User.omniauth_to_db request.env['omniauth.auth']
+    rescue
+      flash[:error] = "Can't authorize you..."
+    else
+      @user.load_matches(20)
+      session[:user_id] = @user.id
+      flash[:success] = "Welcome, #{@user.nickname}!"
+    end
+    redirect_to root_path
+  end
+
+  def destroy
+    if current_user
+      session.delete(:user_id)
+      flash[:success] = "GGWP"
+    end
+    redirect_to root_path
+  end
+end
